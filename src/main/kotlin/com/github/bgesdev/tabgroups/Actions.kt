@@ -73,7 +73,7 @@ class RemoveFromGroupAction : DumbAwareAction() {
 }
 
 /**
- * Window ▸ Tab Groups ▸ <group>: collapse/expand without the strip. Needed with Host A, where collapsing
+ * Window ▸ Tab Chips ▸ <group>: collapse/expand without the strip. Needed with Host A, where collapsing
  * the last open tabs leaves no editor (and so no strip) to click.
  */
 class ToggleGroupsActionGroup : ActionGroup(), DumbAware {

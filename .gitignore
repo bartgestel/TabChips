@@ -4,3 +4,8 @@
 .intellijPlatform
 .kotlin
 build
+
+# Signing keys and certificates (see README "Publishing")
+*.pem
+*.crt
+*.key

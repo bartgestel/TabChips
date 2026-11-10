@@ -34,8 +34,8 @@ class TabGroupsSettings : PersistentStateComponent<TabGroupsSettings.Data> {
     }
 }
 
-/** Settings | Tools | Tab Groups */
-class TabGroupsConfigurable : BoundConfigurable("Tab Groups") {
+/** Settings | Tools | Tab Chips */
+class TabGroupsConfigurable : BoundConfigurable("Tab Chips") {
     private val settings get() = TabGroupsSettings.getInstance().state
 
     private val rulesModel = ListTableModel<AutoGroupRule>(

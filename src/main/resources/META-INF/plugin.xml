@@ -1,11 +1,38 @@
 <idea-plugin>
     <id>com.github.bgesdev.tabgroups</id>
-    <name>Tab Groups</name>
-    <vendor>Bart</vendor>
+    <name>Tab Chips</name>
+    <vendor email="bart@bartvangestel.nl" url="https://bartvangestel.nl">Bart van Gestel</vendor>
     <description><![CDATA[
-        <p>Browser-style tab groups for the editor: name and color a set of files,
-        then collapse the group to close its tabs and expand it to reopen them.</p>
+        <p>Browser-style tab groups for the editor. Give a set of files a name and a color, and collapse the
+        group to close its tabs or expand it to reopen them, like tab groups in a web browser.</p>
+        <ul>
+            <li><b>Group strip:</b> a row of colored chips below the editor tabs, one per group. Click a chip to
+                collapse or expand it, and click a file chip to open that file.</li>
+            <li><b>Tab menu:</b> right-click an editor tab to add it to a group, start a new group from it,
+                or remove it from its group. Right-click a group chip to rename, recolor or delete it.</li>
+            <li><b>Auto-grouping:</b> map file extensions to groups (for example <code>kt, kts</code> to "Kotlin"),
+                and newly opened files join their group automatically. The <code>@tables</code> keyword does the
+                same for database tables and views.</li>
+            <li><b>One group at a time:</b> optionally, opening a group closes the tabs of the group that was open.</li>
+            <li>Groups are saved per project and are not shared through version control. Colors follow your theme.</li>
+        </ul>
+        <p>Settings are under <i>Settings | Tools | Tab Chips</i>. An experimental option shows a single shared
+        strip above all editor tabs instead.</p>
+        <p>Source and issues: <a href="https://github.com/bartgestel/TabChips">github.com/bartgestel/TabChips</a></p>
     ]]></description>
+    <change-notes><![CDATA[
+        <h3>0.2.0</h3>
+        <ul>
+            <li>Auto-grouping: assign newly opened files to groups by file extension, set up in a table in the settings.</li>
+            <li>The <code>@tables</code> keyword auto-groups database tables and views.</li>
+            <li>Option to keep only one group open at a time.</li>
+            <li>Fixed database table tabs showing as missing in a group.</li>
+        </ul>
+        <h3>0.1.0</h3>
+        <ul>
+            <li>First release: group strip, tab and chip menus, collapse and expand, saved per project.</li>
+        </ul>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends> <!-- FileColorManager -->
@@ -14,7 +41,7 @@
         <editorNotificationProvider implementation="com.github.bgesdev.tabgroups.NotificationStripProvider"/>
         <postStartupActivity implementation="com.github.bgesdev.tabgroups.StripPlacementStartup"/>
         <applicationConfigurable parentId="tools" id="com.github.bgesdev.tabgroups.settings"
-                                 instance="com.github.bgesdev.tabgroups.TabGroupsConfigurable" displayName="Tab Groups"/>
+                                 instance="com.github.bgesdev.tabgroups.TabGroupsConfigurable" displayName="Tab Chips"/>
     </extensions>
 
     <projectListeners>
@@ -34,7 +61,7 @@
             <add-to-group group-id="EditorTabPopupMenu" anchor="last"/>
         </group>
         <group id="TabGroups.WindowMenu" class="com.github.bgesdev.tabgroups.ToggleGroupsActionGroup"
-               popup="true" text="Tab Groups">
+               popup="true" text="Tab Chips">
             <add-to-group group-id="WindowMenu" anchor="last"/>
         </group>
     </actions>

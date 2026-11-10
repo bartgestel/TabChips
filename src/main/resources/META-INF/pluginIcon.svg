@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <!-- Tab Chips: a tab row with three colored group chips -->
+  <rect x="3" y="8" width="34" height="24" rx="5" fill="#EBECF0"/>
+  <rect x="6" y="12" width="13" height="7" rx="3.5" fill="#3574F0"/>
+  <rect x="21" y="12" width="7" height="7" rx="3.5" fill="#5FB865"/>
+  <rect x="30" y="12" width="4" height="7" rx="2" fill="#E08855"/>
+  <rect x="6" y="22.5" width="28" height="2.5" rx="1.25" fill="#A8ADBD"/>
+  <rect x="6" y="27" width="18" height="2.5" rx="1.25" fill="#C9CCD6"/>
+</svg>

@@ -1,4 +1,4 @@
-# Tab Groups
+# Tab Chips
 
 Browser-style tab groups for IntelliJ-based IDEs (2026.2+, built and tested against PhpStorm 2026.2.3).
 A strip of colored chips, one per group: click a chip to collapse the group (its tabs close) or expand it
@@ -9,14 +9,14 @@ A strip of colored chips, one per group: click a chip to collapse the group (its
 - **Create:** click `+` on the strip, or right-click an editor tab → *New Group from This Tab…*
 - **Assign:** right-click a tab → *Add to Group ▸* / *Remove from Group*. A file belongs to at most one group.
 - **Edit a group:** right-click its chip → *Rename…*, *Color ▸*, *Delete Group*.
-- **Without a strip** (e.g. all tabs closed): *Window ▸ Tab Groups ▸ Collapse/Expand "…"*.
-- **Auto-grouping:** *Settings ▸ Tools ▸ Tab Groups ▸ Auto-Grouping* table: a group name plus extensions
+- **Without a strip** (e.g. all tabs closed): *Window ▸ Tab Chips ▸ Collapse/Expand "…"*.
+- **Auto-grouping:** *Settings ▸ Tools ▸ Tab Chips ▸ Auto-Grouping* table: a group name plus extensions
   (`kt, kts`, `*.blade.php`). When you open a file that isn't in a group, it joins the matching group, which is
   created if needed. The longest matching extension wins. Only applies when a file is opened.
   The keyword `@tables` matches tables and views opened from the Database tool window (they have no extension).
-- **One group at a time:** *Settings ▸ Tools ▸ Tab Groups ▸ Only one group open at a time*. Expanding a group
+- **One group at a time:** *Settings ▸ Tools ▸ Tab Chips ▸ Only one group open at a time*. Expanding a group
   collapses the open one and closes its tabs; ungrouped tabs stay open. Off by default.
-- **Placement:** *Settings ▸ Tools ▸ Tab Groups*. Default: a strip below each editor's tab row.
+- **Placement:** *Settings ▸ Tools ▸ Tab Chips*. Default: a strip below each editor's tab row.
   Experimental: one shared strip above all tab rows.
 
 ## Develop
@@ -37,6 +37,42 @@ A strip of colored chips, one per group: click a chip to collapse the group (its
 | `StripHosts.kt` | `StripHost` with Host A (editor notification) and Host B (shared strip), fallback logic |
 | `Actions.kt` | Tab context menu, chip menus, Window menu |
 | `TabGroupsSettings.kt` | App-level setting + settings page |
+
+## Publishing to JetBrains Marketplace
+
+Plugin ID `com.github.bgesdev.tabgroups`, display name **Tab Chips** ("Tab Groups" is already taken on the
+Marketplace). License: MIT (see `LICENSE`).
+
+**One-time setup**
+
+1. Source: https://github.com/bartgestel/TabChips (also linked in the plugin description). Enter it as the
+   source URL on the Marketplace plugin page.
+2. Create a signing key and certificate, outside this repo (`*.pem` / `*.crt` are git-ignored anyway):
+   ```bash
+   openssl genpkey -aes-256-cbc -algorithm RSA -out private_encrypted.pem -pkeyopt rsa_keygen_bits:4096
+   openssl rsa -in private_encrypted.pem -out private.pem
+   openssl req -key private.pem -new -x509 -days 365 -out chain.crt
+   ```
+3. Export them for Gradle (the build reads these environment variables, see `build.gradle.kts`):
+   ```bash
+   export CERTIFICATE_CHAIN="$(cat chain.crt)"
+   export PRIVATE_KEY="$(cat private_encrypted.pem)"
+   export PRIVATE_KEY_PASSWORD='the password you chose'
+   ```
+
+**First release (manual upload)**
+
+1. Bump `version` in `gradle.properties` and add a matching entry to `<change-notes>` in `plugin.xml`.
+2. `./gradlew signPlugin verifyPlugin`: the signed zip is `build/distributions/TabGroups-<version>-signed.zip`.
+   Install it with *Install Plugin from Disk* and try it.
+3. Sign in at plugins.jetbrains.com, open *Add new plugin*, accept the Developer Agreement, choose MIT,
+   upload the signed zip, and fill in the source URL. JetBrains reviews it; if there is no answer after
+   3–4 working days, email marketplace@jetbrains.com.
+
+**Later releases**
+
+1. Create a token under *My Tokens* on the Marketplace and `export PUBLISH_TOKEN=...`.
+2. Bump `version`, add change notes, then `./gradlew publishPlugin` (signs, then uploads).
 
 ## Plugin Verifier (`./gradlew verifyPlugin`)
 
