@@ -1,0 +1,41 @@
+<idea-plugin>
+    <id>com.github.bgesdev.tabgroups</id>
+    <name>Tab Groups</name>
+    <vendor>Bart</vendor>
+    <description><![CDATA[
+        <p>Browser-style tab groups for the editor: name and color a set of files,
+        then collapse the group to close its tabs and expand it to reopen them.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends> <!-- FileColorManager -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <editorNotificationProvider implementation="com.github.bgesdev.tabgroups.NotificationStripProvider"/>
+        <postStartupActivity implementation="com.github.bgesdev.tabgroups.StripPlacementStartup"/>
+        <applicationConfigurable parentId="tools" id="com.github.bgesdev.tabgroups.settings"
+                                 instance="com.github.bgesdev.tabgroups.TabGroupsConfigurable" displayName="Tab Groups"/>
+    </extensions>
+
+    <projectListeners>
+        <listener class="com.github.bgesdev.tabgroups.EditorEventsListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+    <actions>
+        <group id="TabGroups.TabMenu">
+            <separator/>
+            <group id="TabGroups.AddToGroup" class="com.github.bgesdev.tabgroups.AddToGroupActionGroup"
+                   popup="true" text="Add to Group"/>
+            <action id="TabGroups.NewGroupFromTab" class="com.github.bgesdev.tabgroups.NewGroupFromTabAction"
+                    text="New Group from This Tab…"/>
+            <action id="TabGroups.RemoveFromGroup" class="com.github.bgesdev.tabgroups.RemoveFromGroupAction"
+                    text="Remove from Group"/>
+            <add-to-group group-id="EditorTabPopupMenu" anchor="last"/>
+        </group>
+        <group id="TabGroups.WindowMenu" class="com.github.bgesdev.tabgroups.ToggleGroupsActionGroup"
+               popup="true" text="Tab Groups">
+            <add-to-group group-id="WindowMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
