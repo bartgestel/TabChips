@@ -3,9 +3,6 @@ package com.github.bgesdev.tabgroups
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem
 import com.intellij.ui.FileColorManager
 import com.intellij.ui.JBColor
 import com.intellij.util.messages.MessageBusConnection
@@ -72,7 +69,7 @@ class TabGroupStrip(private val project: Project) : JPanel(WrapLayout(FlowLayout
         }
         // Files not in the VFS cache yet (e.g. right after a restart) show as missing; look them up in the
         // background and redraw once if any turn out to exist. Truly missing files are never found → no loop.
-        val uncached = service.model.groups.filter { !it.collapsed }.flatMap { it.files }.filter { cachedFile(it) == null }
+        val uncached = service.model.groups.filter { !it.collapsed }.flatMap { it.files }.filter { service.knownFile(it) == null }
         if (uncached.isNotEmpty()) service.resolve(uncached) { found -> if (found.isNotEmpty()) service.changed() }
         add(Chip("+", { null }, bold = true).apply {
             toolTipText = "New tab group (adds the current file)"
@@ -83,7 +80,7 @@ class TabGroupStrip(private val project: Project) : JPanel(WrapLayout(FlowLayout
     }
 
     private fun fileChip(url: String, color: () -> Color?, active: Boolean): Chip {
-        val file = cachedFile(url)
+        val file = TabGroupsService.getInstance(project).knownFile(url)
         return Chip(file?.name ?: url.substringAfterLast('/'), color, bold = false, active).apply {
             font = JBUI.Fonts.smallFont()
             onMenu = { showFileMenu(project, url, it) }
@@ -97,12 +94,6 @@ class TabGroupStrip(private val project: Project) : JPanel(WrapLayout(FlowLayout
             }
         }
     }
-}
-
-/** Cache-only VFS lookup: never touches disk, so it is safe on the EDT. Null = not cached or deleted. */
-private fun cachedFile(url: String): VirtualFile? {
-    val fs = VirtualFileManager.getInstance().getFileSystem(VirtualFileManager.extractProtocol(url)) as? NewVirtualFileSystem
-    return fs?.findFileByPathIfCached(VirtualFileManager.extractPath(url))?.takeIf { it.isValid }
 }
 
 /**

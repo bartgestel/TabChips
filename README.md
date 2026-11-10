@@ -10,6 +10,10 @@ A strip of colored chips, one per group: click a chip to collapse the group (its
 - **Assign:** right-click a tab → *Add to Group ▸* / *Remove from Group*. A file belongs to at most one group.
 - **Edit a group:** right-click its chip → *Rename…*, *Color ▸*, *Delete Group*.
 - **Without a strip** (e.g. all tabs closed): *Window ▸ Tab Groups ▸ Collapse/Expand "…"*.
+- **Auto-grouping:** *Settings ▸ Tools ▸ Tab Groups ▸ Auto-Grouping* table: a group name plus extensions
+  (`kt, kts`, `*.blade.php`). When you open a file that isn't in a group, it joins the matching group, which is
+  created if needed. The longest matching extension wins. Only applies when a file is opened.
+  The keyword `@tables` matches tables and views opened from the Database tool window (they have no extension).
 - **One group at a time:** *Settings ▸ Tools ▸ Tab Groups ▸ Only one group open at a time*. Expanding a group
   collapses the open one and closes its tabs; ungrouped tabs stay open. Off by default.
 - **Placement:** *Settings ▸ Tools ▸ Tab Groups*. Default: a strip below each editor's tab row.

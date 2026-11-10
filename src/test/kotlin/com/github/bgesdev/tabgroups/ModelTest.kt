@@ -59,4 +59,48 @@ class ModelTest {
         assertEquals(listOf(listOf(a), listOf(b)), back.groups.map { it.files })
         assertEquals(JDOMUtil.write(xml), JDOMUtil.write(XmlSerializer.serialize(back)))
     }
+
+    @Test
+    fun autoGroupRules() {
+        val rules = listOf(AutoGroupRule("Kotlin", "kt, .kts"), AutoGroupRule("Views", "*.blade.php"), AutoGroupRule("PHP", "php"))
+        assertEquals("Kotlin", matchRule(rules, "Main.KT"))
+        assertEquals("Kotlin", matchRule(rules, "build.gradle.kts"))
+        assertEquals("Views", matchRule(rules, "home.blade.php")) // longest extension wins
+        assertEquals("PHP", matchRule(rules, "index.php"))
+        assertNull(matchRule(rules, "notes.txt"))
+        assertNull(matchRule(rules, "kt")) // a bare name is not an extension
+        assertNull(matchRule(listOf(AutoGroupRule("", "txt")), "a.txt")) // rows without a group name are ignored
+    }
+
+    @Test
+    fun tablesKeyword() {
+        val rules = listOf(AutoGroupRule("SQL", "sql"), AutoGroupRule("DB", "@tables, csv"))
+        assertEquals("DB", matchRule(rules, "users", isTable = true))
+        assertNull(matchRule(listOf(AutoGroupRule("SQL", "sql")), "users", isTable = true)) // no @tables rule
+        assertEquals("DB", matchRule(rules, "export.csv")) // normal extensions in the same row still work
+        assertNull(matchRule(rules, "users.@tables")) // the keyword never matches a file name
+        assertEquals("SQL", matchRule(rules, "schema.sql"))
+    }
+
+    @Test
+    fun autoAddCreatesGroupOnceAndRespectsExistingGroups() {
+        val s = TabGroupsState()
+        val manual = s.create("manual").also { s.add(it, a) }
+
+        assertEquals(false, s.autoAdd(a, "Kotlin")) // already grouped by hand: left alone
+        assertSame(manual, s.groupOf(a))
+
+        assertEquals(true, s.autoAdd(b, "Kotlin"))
+        assertEquals(true, s.autoAdd("file:///p/C.kt", "Kotlin"))
+        assertEquals(1, s.groups.count { it.name == "Kotlin" })
+        assertEquals(listOf(b, "file:///p/C.kt"), s.groups.single { it.name == "Kotlin" }.files)
+    }
+
+    @Test
+    fun settingsRoundTrip() {
+        val data = TabGroupsSettings.Data(exclusiveGroups = true, autoRules = mutableListOf(AutoGroupRule("Kotlin", "kt, kts")))
+        val back = XmlSerializer.deserialize(XmlSerializer.serialize(data), TabGroupsSettings.Data::class.java)
+        assertEquals(true, back.exclusiveGroups)
+        assertEquals(listOf(AutoGroupRule("Kotlin", "kt, kts")), back.autoRules)
+    }
 }

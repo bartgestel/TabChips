@@ -15,10 +15,13 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFileWithoutContent
+import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.concurrency.ThreadingAssertions
 import com.intellij.util.messages.Topic
 import org.jetbrains.concurrency.CancellablePromise
+import java.util.concurrent.ConcurrentHashMap
 
 fun interface TabGroupsListener {
     fun changed()
@@ -68,10 +71,28 @@ class TabGroupsService(private val project: Project) : PersistentStateComponent<
         return resolve(group.files.toList()) { files -> files.forEach { editors.openFile(it, false) } }
     }
 
+    /** Files seen in tabs or found by [resolve], by URL. Covers file systems without a VFS cache (e.g. database tables). */
+    private val known = ConcurrentHashMap<String, VirtualFile>()
+
+    fun remember(file: VirtualFile) {
+        known[file.url] = file
+    }
+
+    /**
+     * EDT-safe lookup that never touches disk: a remembered file, or the VFS cache for regular files.
+     * Null means "not found yet or deleted"; [resolve] can look further in the background.
+     */
+    fun knownFile(url: String): VirtualFile? {
+        known[url]?.let { if (it.isValid) return it else known.remove(url) }
+        val fs = VirtualFileManager.getInstance().getFileSystem(VirtualFileManager.extractProtocol(url)) as? NewVirtualFileSystem
+        return fs?.findFileByPathIfCached(VirtualFileManager.extractPath(url))?.takeIf { it.isValid }
+    }
+
     /** Looks files up off the EDT (VFS lookups may hit disk), then hands the existing ones to [then] on the EDT. */
     fun resolve(urls: List<String>, then: (List<VirtualFile>) -> Unit): CancellablePromise<List<VirtualFile>> =
         ReadAction.nonBlocking<List<VirtualFile>> {
             urls.mapNotNull { VirtualFileManager.getInstance().findFileByUrl(it)?.takeIf(VirtualFile::isValid) }
+                .onEach(::remember) // so the strip's next redraw finds them without another lookup
         }
             .expireWith(this)
             .finishOnUiThread(ModalityState.defaultModalityState(), then)
@@ -89,10 +110,25 @@ class TabGroupsService(private val project: Project) : PersistentStateComponent<
     }
 }
 
-/** Registered in plugin.xml: redraw strips when tabs open, close or the selection moves (active highlight). */
+/**
+ * Registered in plugin.xml: redraw strips when tabs open, close or the selection moves (active highlight).
+ * On open, an ungrouped file whose extension matches a settings rule is added to that rule's group.
+ */
 class EditorEventsListener(private val project: Project) : FileEditorManagerListener {
-    override fun fileOpened(source: FileEditorManager, file: VirtualFile) = refresh()
+    override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+        val service = TabGroupsService.getInstance(project)
+        service.remember(file)
+        val groupName = matchRule(TabGroupsSettings.getInstance().state.autoRules, file.name, isDatabaseTable(file))
+        if (groupName != null) service.update { autoAdd(file.url, groupName) } else refresh()
+    }
+
     override fun fileClosed(source: FileEditorManager, file: VirtualFile) = refresh()
     override fun selectionChanged(event: FileEditorManagerEvent) = refresh()
     private fun refresh() = TabGroupsService.getInstance(project).changed()
 }
+
+/**
+ * A table or view opened from the Database tool window: the database plugin's `das://` file system, data editor
+ * (no text content). Checked by URL, so the plugin needs no dependency on the database plugin.
+ */
+fun isDatabaseTable(file: VirtualFile) = file.url.startsWith("das://") && file is VirtualFileWithoutContent
