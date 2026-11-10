@@ -48,15 +48,21 @@ class TabGroupsService(private val project: Project) : PersistentStateComponent<
     /**
      * Collapse closes the group's open tabs; expand reopens all of its files that still exist.
      * Missing files are skipped, so a deleted file never breaks collapse/expand.
+     * With the "one group open at a time" setting, expanding first collapses every other expanded group.
      * Returns the pending lookup when expanding (tests wait on it), null when collapsing.
      */
     fun toggle(group: TabGroup): CancellablePromise<*>? {
         val editors = FileEditorManager.getInstance(project)
-        update { group.collapsed = !group.collapsed }
-        if (group.collapsed) {
-            editors.openFiles.filter { it.url in group.files }.forEach(editors::closeFile) // no VFS lookup needed
-            return null
+        val closing = if (!group.collapsed) listOf(group)
+        else if (TabGroupsSettings.getInstance().state.exclusiveGroups) model.groups.filter { it !== group && !it.collapsed }
+        else emptyList()
+        update {
+            group.collapsed = !group.collapsed
+            closing.forEach { it.collapsed = true }
         }
+        val closeUrls = closing.flatMapTo(HashSet()) { it.files }
+        editors.openFiles.filter { it.url in closeUrls }.forEach(editors::closeFile) // no VFS lookup needed
+        if (group.collapsed) return null
         // ponytail: openFile is deprecated in 263 for requestOpenFile(file, FileEditorOpenRequest), which 262 lacks.
         // Switch both call sites when since-build moves to 263.
         return resolve(group.files.toList()) { files -> files.forEach { editors.openFile(it, false) } }

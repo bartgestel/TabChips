@@ -10,6 +10,8 @@ A strip of colored chips, one per group: click a chip to collapse the group (its
 - **Assign:** right-click a tab → *Add to Group ▸* / *Remove from Group*. A file belongs to at most one group.
 - **Edit a group:** right-click its chip → *Rename…*, *Color ▸*, *Delete Group*.
 - **Without a strip** (e.g. all tabs closed): *Window ▸ Tab Groups ▸ Collapse/Expand "…"*.
+- **One group at a time:** *Settings ▸ Tools ▸ Tab Groups ▸ Only one group open at a time*. Expanding a group
+  collapses the open one and closes its tabs; ungrouped tabs stay open. Off by default.
 - **Placement:** *Settings ▸ Tools ▸ Tab Groups*. Default: a strip below each editor's tab row.
   Experimental: one shared strip above all tab rows.
 
